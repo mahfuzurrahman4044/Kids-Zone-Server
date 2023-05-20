@@ -31,6 +31,20 @@ async function run() {
         const database = client.db("insertToy");
         const toyCollection = database.collection("toy");
 
+        const indexKeys = { name: 1 };
+        const indexOptions = { name: "name" };
+
+        const result = await toyCollection.createIndex(indexKeys, indexOptions);
+
+        app.get("/searchName/:name", async (req, res) => {
+            const searchName = req.params.name;
+            const result = await toyCollection.find({
+                name: { $regex: searchName, $options: "i" }
+            }).toArray();
+
+            res.send(result)
+        })
+
         app.post('/addToy', async (req, res) => {
             const addToy = req.body;
             console.log(addToy);
@@ -81,7 +95,7 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await toyCollection.deleteOne(query)
             res.send(result);
-          })
+        })
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
